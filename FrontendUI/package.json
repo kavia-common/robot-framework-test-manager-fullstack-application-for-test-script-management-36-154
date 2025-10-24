@@ -1,17 +1,32 @@
 {
-  "name": "react-kavia",
-  "version": "0.1.0",
+  "name": "robot-framework-test-manager-frontend",
+  "version": "1.0.0",
   "private": true,
   "dependencies": {
+    "@testing-library/jest-dom": "^6.4.8",
+    "@testing-library/react": "^14.3.1",
+    "@testing-library/user-event": "^14.5.2",
+    "axios": "^1.7.7",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-router-dom": "^6.26.2",
     "react-scripts": "^5.0.1"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.12",
+    "@types/node": "^20.11.30",
+    "@types/react": "^18.2.79",
+    "@types/react-dom": "^18.2.25",
+    "@types/react-router-dom": "^5.3.3",
+    "cross-env": "^7.0.3",
+    "typescript": "^5.6.2"
   },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "test": "cross-env CI=true react-scripts test --watchAll=false",
+    "eject": "react-scripts eject",
+    "lint": "echo \"Add ESLint config for TS if needed\""
   },
   "eslintConfig": {
     "extends": "react-app"
@@ -27,8 +42,5 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  },
-  "devDependencies": {
-    "cross-env": "^7.0.3"
   }
 }
