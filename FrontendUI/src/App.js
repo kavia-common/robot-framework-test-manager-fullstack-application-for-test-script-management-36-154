@@ -1,48 +1,105 @@
-import React, { useState, useEffect } from 'react';
-import logo from './logo.svg';
+/**
+ * Main Application Component
+ * Configures routing and provides authentication context
+ */
+
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import Login from './pages/Login';
+import Dashboard from './pages/Dashboard';
+import TestDetail from './pages/TestDetail';
+import CreateTest from './pages/CreateTest';
+import Queue from './pages/Queue';
+import History from './pages/History';
 import './App.css';
 
 // PUBLIC_INTERFACE
-function App() {
-  const [theme, setTheme] = useState('light');
+/**
+ * Protected Route Component
+ * Redirects to login if user is not authenticated
+ */
+const ProtectedRoute = ({ children }) => {
+  const { isAuthenticated, loading } = useAuth();
+  
+  if (loading) {
+    return (
+      <div className="app-loading">
+        <div className="spinner"></div>
+        <p>Loading...</p>
+      </div>
+    );
+  }
+  
+  return isAuthenticated ? children : <Navigate to="/login" replace />;
+};
 
-  // Effect to apply theme to document element
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme);
-  }, [theme]);
-
-  // PUBLIC_INTERFACE
-  const toggleTheme = () => {
-    setTheme(prevTheme => prevTheme === 'light' ? 'dark' : 'light');
-  };
-
+// PUBLIC_INTERFACE
+/**
+ * Main App Router Component
+ */
+const AppRoutes = () => {
   return (
-    <div className="App">
-      <header className="App-header">
-        <button 
-          className="theme-toggle" 
-          onClick={toggleTheme}
-          aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
-        >
-          {theme === 'light' ? '🌙 Dark' : '☀️ Light'}
-        </button>
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <p>
-          Current theme: <strong>{theme}</strong>
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Routes>
+      <Route path="/login" element={<Login />} />
+      <Route
+        path="/"
+        element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/tests/create"
+        element={
+          <ProtectedRoute>
+            <CreateTest />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/tests/:testId"
+        element={
+          <ProtectedRoute>
+            <TestDetail />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/queue"
+        element={
+          <ProtectedRoute>
+            <Queue />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/history"
+        element={
+          <ProtectedRoute>
+            <History />
+          </ProtectedRoute>
+        }
+      />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+};
+
+// PUBLIC_INTERFACE
+/**
+ * Root App Component
+ */
+function App() {
+  return (
+    <Router>
+      <AuthProvider>
+        <div className="App">
+          <AppRoutes />
+        </div>
+      </AuthProvider>
+    </Router>
   );
 }
 
