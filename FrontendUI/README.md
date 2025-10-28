@@ -1,82 +1,56 @@
-# Lightweight React Template for KAVIA
+# Test Management FrontendUI (React + TypeScript)
 
-This project provides a minimal React template with a clean, modern UI and minimal dependencies.
+This is the React + TypeScript frontend for the Robot Framework Test Manager. It implements:
+- Dashboard with test cards
+- Stepwise test creation
+- Test case detail and configuration panel
+- Queue visualization with controls
+- Run history and log viewer
+- Notifications (toasts)
+- RBAC-aware UI states
+- API client services for /tests, /cases, /execute, /queue, /history, /logs
 
-## Features
+It uses React Router, React Query, Axios, react-hook-form + zod, Jest/RTL, and Cypress placeholders.
+WCAG 2.1 basics are included: keyboard focus management, ARIA labels, skip link, and proper landmarks.
 
-- **Lightweight**: No heavy UI frameworks - uses only vanilla CSS and React
-- **Modern UI**: Clean, responsive design with KAVIA brand styling
-- **Fast**: Minimal dependencies for quick loading times
-- **Simple**: Easy to understand and modify
+## Quick start
 
-## Getting Started
+1. Install dependencies
+   npm install
 
-In the project directory, you can run:
+2. Copy environment
+   cp .env.example .env
+   # Adjust VITE_API_BASE_URL to your backend
 
-### `npm start`
+3. Start dev server
+   npm run dev
+   # App at http://localhost:5173
 
-Runs the app in development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+4. Run unit tests
+   npm test
 
-### `npm test`
+5. Lint & format
+   npm run lint
+   npm run format
 
-Launches the test runner in interactive watch mode.
+6. E2E tests (placeholder)
+   npm run cypress:open
 
-### `npm run build`
+## Authentication
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+- Currently uses a scaffolded in-memory token set on login. The Axios client attaches the token as a Bearer header.
+- For production, switch to server-set httpOnly cookie and update getAuthToken() accordingly.
 
-## Customization
+## Project scripts
 
-### Colors
+- dev: Vite dev server
+- build: TypeScript build + Vite build
+- preview: Serve built app locally
+- test: Jest+RTL
+- cypress:*: Cypress e2e
 
-The main brand colors are defined as CSS variables in `src/App.css`:
+## Notes
 
-```css
-:root {
-  --kavia-orange: #E87A41;
-  --kavia-dark: #1A1A1A;
-  --text-color: #ffffff;
-  --text-secondary: rgba(255, 255, 255, 0.7);
-  --border-color: rgba(255, 255, 255, 0.1);
-}
-```
-
-### Components
-
-This template uses pure HTML/CSS components instead of a UI framework. You can find component styles in `src/App.css`. 
-
-Common components include:
-- Buttons (`.btn`, `.btn-large`)
-- Container (`.container`)
-- Navigation (`.navbar`)
-- Typography (`.title`, `.subtitle`, `.description`)
-
-## Learn More
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+- API endpoints and types follow the provided OpenAPI spec.
+- Basic error/loading states and pagination/filter params are wired in.
+- RBAC-aware UI via AccessControl and useAuth.hasRole.
