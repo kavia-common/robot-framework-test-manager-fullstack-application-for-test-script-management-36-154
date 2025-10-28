@@ -4,6 +4,7 @@ import Login from "@pages/Login";
 import Tests from "@pages/Tests";
 import TestCase from "@pages/TestCase";
 import History from "@pages/History";
+import NotFound from "@pages/NotFound";
 import { useAuth } from "@hooks/useAuth";
 import Loading from "@components/Common/Loading";
 
@@ -26,9 +27,9 @@ export const router = createBrowserRouter([
       { path: "tests", element: <Tests /> },
       { path: "tests/:id", element: <Tests /> },
       { path: "cases/:id", element: <TestCase /> },
-      { path: "history", element: <History /> }
+      { path: "history", element: <History /> },
+      { path: "*", element: <NotFound /> }
     ]
   },
-  { path: "/login", element: <Login /> },
-  { path: "*", element: <Navigate to="/" replace /> }
+  { path: "/login", element: <Login /> }
 ]);
