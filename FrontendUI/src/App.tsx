@@ -4,6 +4,7 @@ import { useAuth } from "@hooks/useAuth";
 import { useNotifications } from "@hooks/useNotifications";
 import QueueBar from "@components/Queue/QueueBar";
 import HistoryLogsPanel from "@components/History/HistoryLogsPanel";
+import { API_BASE_URL } from "@api/client";
 
 export default function App() {
   const { user, logout } = useAuth();
@@ -60,6 +61,22 @@ export default function App() {
           )}
         </div>
       </header>
+
+      {import.meta.env.DEV ? (
+        <div
+          role="note"
+          aria-label="API base"
+          style={{
+            background: "#1e2430",
+            borderBottom: "1px solid var(--border)",
+            color: "var(--muted)",
+            padding: "4px 12px",
+            fontSize: 12
+          }}
+        >
+          API: {API_BASE_URL}
+        </div>
+      ) : null}
 
       <main id="main" ref={mainRef} tabIndex={-1} className="content" role="main">
         <Outlet />

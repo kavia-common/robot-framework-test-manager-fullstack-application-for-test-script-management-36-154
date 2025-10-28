@@ -1,8 +1,15 @@
 import axios from "axios";
 import { getAuthToken } from "@hooks/useAuth";
 
+// Resolve API base URL from Vite env with sensible default for local dev
+// Default: http://localhost:8000/api/v1
+export const API_BASE_URL: string =
+  (import.meta as any).env?.VITE_API_BASE_URL ||
+  (typeof import.meta !== "undefined" && (import.meta as any).env?.VITE_API_BASE_URL) ||
+  "http://localhost:8000/api/v1";
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || "/api/v1",
+  baseURL: API_BASE_URL,
   timeout: 20000
 });
 
