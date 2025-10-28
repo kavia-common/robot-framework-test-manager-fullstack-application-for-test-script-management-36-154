@@ -23,10 +23,10 @@ function TestCard({ test }: { test: Test }) {
 
 // PUBLIC_INTERFACE
 export default function TestCardsGrid({ query }: Props) {
-  /** Grid of test cards with search query support */
-  const { data, isLoading, isError, refetch, error } = useQuery({
-    queryKey: ["tests", { query }],
-    queryFn: () => TestsAPI.list({ q: query }),
+  /** Grid of test cards with search query support and pagination */
+  const { data, isLoading, isError, refetch, error, isFetching } = useQuery({
+    queryKey: ["tests", { query, page: 1, pageSize: 50 }],
+    queryFn: () => TestsAPI.list({ q: query, page: 1, pageSize: 50 })
   });
 
   if (isLoading) return <Loading label="Loading tests..." />;
@@ -35,7 +35,7 @@ export default function TestCardsGrid({ query }: Props) {
   const tests = data ?? [];
   return (
     <section aria-label="Tests grid" className="grid">
-      {tests.length === 0 ? <p>No tests available.</p> : tests.map((t) => <TestCard key={t.id} test={t} />)}
+      {tests.length === 0 ? <p className="muted">{isFetching ? "Searching..." : "No tests available."}</p> : tests.map((t) => <TestCard key={t.id} test={t} />)}
     </section>
   );
 }

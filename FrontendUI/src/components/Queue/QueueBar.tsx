@@ -5,9 +5,9 @@ import ErrorState from "@components/Common/ErrorState";
 
 export default function QueueBar() {
   const qc = useQueryClient();
-  const { data, isLoading, isError, error, refetch } = useQuery({
-    queryKey: ["queue"],
-    queryFn: () => QueueAPI.list(),
+  const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
+    queryKey: ["queue", { page: 1, pageSize: 50 }],
+    queryFn: () => QueueAPI.list({ page: 1, pageSize: 50 }),
     refetchInterval: 5000
   });
 
@@ -20,8 +20,8 @@ export default function QueueBar() {
     <div className="queuebar" role="region" aria-label="Execution queue">
       <div className="queue-header">
         <strong>Queue</strong>
-        <button className="btn small" onClick={() => refetch()} aria-label="Refresh queue">
-          Refresh
+        <button className="btn small" onClick={() => refetch()} aria-label="Refresh queue" aria-busy={isFetching}>
+          {isFetching ? "Refreshing..." : "Refresh"}
         </button>
       </div>
       {isLoading ? (

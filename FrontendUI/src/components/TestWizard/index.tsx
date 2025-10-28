@@ -27,6 +27,8 @@ export default function TestWizard({ onCreated }: { onCreated?: () => void }) {
   const onSubmit = handleSubmit(async (values) => {
     await TestsAPI.create(values);
     notify("Test created", "success");
+    // Dispatch a custom event so grids can refetch
+    window.dispatchEvent(new CustomEvent("tests:changed"));
     onCreated?.();
   });
 

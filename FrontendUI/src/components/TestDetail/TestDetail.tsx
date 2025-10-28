@@ -12,9 +12,9 @@ export default function TestDetail() {
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const qc = useQueryClient();
 
-  const { data, isLoading, isError, error, refetch } = useQuery({
-    queryKey: ["cases", { test_id: testId }],
-    queryFn: () => CasesAPI.list({ test_id: testId })
+  const { data, isLoading, isError, error, refetch, isFetching } = useQuery({
+    queryKey: ["cases", { test_id: testId, page: 1, pageSize: 100 }],
+    queryFn: () => CasesAPI.list({ test_id: testId, page: 1, pageSize: 100 })
   });
 
   const del = useMutation({
@@ -50,11 +50,14 @@ export default function TestDetail() {
                 {run.isPending ? "Queuing..." : "Run"}
               </button>
               <AccessControl roles={["admin"]}>
-                <button className="btn danger" onClick={() => setConfirmId(c.id)}>Delete</button>
+                <button className="btn danger" onClick={() => setConfirmId(c.id)} disabled={del.isPending}>
+                  {del.isPending && confirmId === c.id ? "Deleting..." : "Delete"}
+                </button>
               </AccessControl>
             </div>
           </li>
         ))}
+        {(data ?? []).length === 0 ? <li className="muted">{isFetching ? "Loading..." : "No cases found."}</li> : null}
       </ul>
 
       <ConfirmDialog

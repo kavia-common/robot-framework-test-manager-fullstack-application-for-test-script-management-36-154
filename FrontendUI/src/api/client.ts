@@ -1,8 +1,11 @@
 import axios from "axios";
 import { getAuthToken, getRefreshToken, setAccessToken, clearAuthState } from "@hooks/useAuth";
 
-// Resolve API base URL from Vite env with sensible default for local dev
-// Default: http://localhost:8000/api/v1
+/**
+ * Resolve API base URL from Vite env with sensible default for local dev.
+ * IMPORTANT: Do not hardcode URLs elsewhere; always use this axios instance.
+ * Default: http://localhost:8000/api/v1
+ */
 export const API_BASE_URL: string =
   (import.meta as any).env?.VITE_API_BASE_URL ||
   (typeof import.meta !== "undefined" && (import.meta as any).env?.VITE_API_BASE_URL) ||
@@ -13,7 +16,9 @@ const api = axios.create({
   timeout: 20000
 });
 
-// Request interceptor to add bearer token
+/**
+ * Attach Bearer JWT from AuthProvider memory store to each request.
+ */
 api.interceptors.request.use((config) => {
   const token = getAuthToken();
   if (token) {
@@ -27,26 +32,28 @@ api.interceptors.request.use((config) => {
 let isRefreshing = false;
 let queuedRequests: Array<(token: string | null) => void> = [];
 
-// Response interceptor: handle 401 -> attempt refresh once -> redirect to login on failure
+/**
+ * Response interceptor:
+ * - On 401, attempt one refresh using refresh token.
+ * - If refresh succeeds, retry queued requests with the new token.
+ * - If refresh fails or no refresh token, clear state and redirect to /login.
+ */
 api.interceptors.response.use(
   (res) => res,
   async (error) => {
     const originalRequest = error?.config;
     const status = error?.response?.status;
 
-    // Only try refresh on 401 for requests that are not marked as _retry
     if (status === 401 && originalRequest && !originalRequest._retry) {
-      originalRequest._retry = true;
+      (originalRequest as any)._retry = true;
       const rt = getRefreshToken();
 
       if (!rt) {
-        // No refresh token available -> clear state and redirect
         clearAuthState();
         if (typeof window !== "undefined") window.location.replace("/login");
         return Promise.reject(error);
       }
 
-      // If already refreshing, queue the request until refresh completes
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           queuedRequests.push((newToken) => {
@@ -63,7 +70,6 @@ api.interceptors.response.use(
 
       try {
         isRefreshing = true;
-        // Refresh using a direct call to the refresh endpoint to avoid circular import
         const refreshResponse = await axios.post(
           `${API_BASE_URL}/auth/refresh`,
           { refresh_token: rt },
@@ -72,15 +78,12 @@ api.interceptors.response.use(
         const newAccess: string | undefined = refreshResponse?.data?.access_token;
         if (newAccess) {
           setAccessToken(newAccess);
-          // drain queue
           queuedRequests.forEach((cb) => cb(newAccess));
           queuedRequests = [];
-          // retry original
           originalRequest.headers = originalRequest.headers ?? {};
           originalRequest.headers.Authorization = `Bearer ${newAccess}`;
           return api(originalRequest);
         } else {
-          // Failed to get token
           clearAuthState();
           queuedRequests.forEach((cb) => cb(null));
           queuedRequests = [];
