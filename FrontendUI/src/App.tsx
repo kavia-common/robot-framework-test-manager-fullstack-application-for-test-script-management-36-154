@@ -1,5 +1,5 @@
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
-import { useEffect, useRef } from "react";
+import React, { useEffect, useRef } from "react";
 import { useAuth } from "@hooks/useAuth";
 import { useNotifications } from "@hooks/useNotifications";
 import QueueBar from "@components/Queue/QueueBar";
@@ -27,12 +27,12 @@ export default function App() {
         <nav aria-label="Primary">
           <ul className="nav">
             <li>
-              <NavLink to="/tests" className={({ isActive }) => (isActive ? "active" : "")}>
+              <NavLink to="/tests" className={({ isActive }: { isActive: boolean }) => (isActive ? "active" : "")}>
                 Tests
               </NavLink>
             </li>
             <li>
-              <NavLink to="/history" className={({ isActive }) => (isActive ? "active" : "")}>
+              <NavLink to="/history" className={({ isActive }: { isActive: boolean }) => (isActive ? "active" : "")}>
                 History
               </NavLink>
             </li>

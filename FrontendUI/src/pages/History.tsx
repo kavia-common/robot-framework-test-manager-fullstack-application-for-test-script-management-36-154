@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { HistoryAPI } from "@api/endpoints";
 import Loading from "@components/Common/Loading";
 import ErrorState from "@components/Common/ErrorState";
-import { useState } from "react";
+import React, { useState } from "react";
 
 export default function History() {
   const [q, setQ] = useState("");

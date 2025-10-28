@@ -1,11 +1,11 @@
 import { useAuth } from "@hooks/useAuth";
 import { useNotifications } from "@hooks/useNotifications";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import React, { useState } from "react";
 
-// PUBLIC_INTERFACE
+ // PUBLIC_INTERFACE
 export default function Login() {
-  /** Login page allowing users to authenticate; integrates with AuthProvider mock. */
+  /** Login page allowing users to authenticate; integrates with backend via AuthProvider. */
   const { login } = useAuth();
   const { notify } = useNotifications();
   const navigate = useNavigate();

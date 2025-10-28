@@ -1,6 +1,6 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-
-type Role = "admin" | "tester" | "viewer";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import type { Role } from "@api/auth";
+import { loginWithPassword } from "@api/auth";
 
 interface User {
   id: string;
@@ -17,54 +17,140 @@ interface AuthContextValue {
   hasRole: (roles: Role | Role[]) => boolean;
 }
 
-let memoryToken: string | null = null;
+/** Storage keys */
+const AK = "auth_access_token";
+const RK = "auth_refresh_token";
+const UK = "auth_user";
 
-// PUBLIC_INTERFACE
+/** Internal module state cache for axios to read */
+let accessTokenMem: string | null = null;
+let refreshTokenMem: string | null = null;
+
+/**
+ * PUBLIC_INTERFACE
+ */
 export function getAuthToken(): string | null {
-  /** Returns current auth token stored in memory (or could be injected via cookie by server). */
-  return memoryToken;
+  /** Get current access token for attaching to API requests. */
+  return accessTokenMem;
+}
+
+/**
+ * PUBLIC_INTERFACE
+ */
+export function getRefreshToken(): string | null {
+  /** Get current refresh token for token refresh flow. */
+  return refreshTokenMem;
+}
+
+/**
+ * PUBLIC_INTERFACE
+ */
+export function setAccessToken(token: string | null) {
+  /** Update access token in memory and sessionStorage (if provided). */
+  accessTokenMem = token;
+  if (token) {
+    sessionStorage.setItem(AK, token);
+  } else {
+    sessionStorage.removeItem(AK);
+  }
+}
+
+/**
+ * PUBLIC_INTERFACE
+ */
+export function clearAuthState() {
+  /** Clear all auth-related state from memory and storage. */
+  accessTokenMem = null;
+  refreshTokenMem = null;
+  sessionStorage.removeItem(AK);
+  sessionStorage.removeItem(RK);
+  sessionStorage.removeItem(UK);
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
+/** Decode minimal claims from a JWT safely (no validation) */
+function decodeJwt<T = any>(token: string | null): T | null {
+  if (!token) return null;
+  const parts = token.split(".");
+  if (parts.length !== 3) return null;
+  try {
+    const payload = JSON.parse(atob(parts[1]));
+    return payload as T;
+  } catch {
+    return null;
+  }
+}
+
+/** Map claims to our User shape; backend should include sub, name, role or similar */
+function claimsToUser(claims: any): User | null {
+  if (!claims) return null;
+  const id = claims.sub || claims.user_id || claims.id;
+  const name = claims.name || claims.username || "User";
+  const role: Role | undefined = claims.role || claims.roles?.[0];
+  if (!id || !role) return null;
+  return { id: String(id), name: String(name), role: role as Role };
+}
+
 // PUBLIC_INTERFACE
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  /** Auth provider storing token in-memory with simple mock login for scaffolding purposes. */
+  /** Auth provider integrated with backend tokens, using access/refresh tokens with axios interceptors. */
   const [user, setUser] = useState<User | null>(null);
   const [bootstrapped, setBootstrapped] = useState(false);
 
   useEffect(() => {
-    // Attempt bootstrap from sessionStorage as fallback (not as secure as httpOnly cookie).
-    const cached = sessionStorage.getItem("auth_user");
-    const token = sessionStorage.getItem("auth_token");
-    if (cached && token) {
-      setUser(JSON.parse(cached));
-      memoryToken = token;
+    // Bootstrap from sessionStorage
+    const at = sessionStorage.getItem(AK);
+    const rt = sessionStorage.getItem(RK);
+    const persistedUser = sessionStorage.getItem(UK);
+
+    accessTokenMem = at;
+    refreshTokenMem = rt;
+
+    if (persistedUser) {
+      try {
+        setUser(JSON.parse(persistedUser));
+      } catch {
+        // fallback to decode from token if corrupted
+        const claims = decodeJwt(at);
+        const u = claimsToUser(claims);
+        if (u) setUser(u);
+      }
+    } else if (at) {
+      const claims = decodeJwt(at);
+      const u = claimsToUser(claims);
+      if (u) {
+        setUser(u);
+        sessionStorage.setItem(UK, JSON.stringify(u));
+      }
     }
+
     setBootstrapped(true);
   }, []);
 
-  const login = useCallback(
-    async (username: string, _password: string) => {
-      // Placeholder: integrate with backend auth later. Assume success and issue a fake token.
-      memoryToken = "FAKE_JWT_TOKEN";
-      const nextUser: User = {
-        id: "u-" + username,
-        name: username,
-        role: username === "admin" ? "admin" : "tester"
-      };
-      setUser(nextUser);
-      sessionStorage.setItem("auth_user", JSON.stringify(nextUser));
-      sessionStorage.setItem("auth_token", memoryToken);
-    },
-    []
-  );
+  const login = useCallback(async (username: string, password: string) => {
+    const res = await loginWithPassword({ username, password });
+    const at = res.access_token;
+    const rt = res.refresh_token ?? null;
+
+    setAccessToken(at);
+    refreshTokenMem = rt;
+    if (rt) sessionStorage.setItem(RK, rt);
+    else sessionStorage.removeItem(RK);
+
+    // prefer explicit user payload; fallback to jwt claims
+    let u: User | null = res.user ?? claimsToUser(decodeJwt(at));
+    // If backend does not supply role in token, we conservatively assign viewer to avoid over-privilege
+    if (!u && at) {
+      u = { id: "me", name: username, role: "viewer" };
+    }
+    setUser(u);
+    if (u) sessionStorage.setItem(UK, JSON.stringify(u));
+  }, []);
 
   const logout = useCallback(() => {
-    memoryToken = null;
+    clearAuthState();
     setUser(null);
-    sessionStorage.removeItem("auth_user");
-    sessionStorage.removeItem("auth_token");
   }, []);
 
   const hasRole = useCallback(
@@ -76,14 +162,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [user]
   );
 
-  const value: AuthContextValue = {
-    user,
-    isAuthenticated: !!user,
-    bootstrapped,
-    login,
-    logout,
-    hasRole
-  };
+  const value: AuthContextValue = useMemo(
+    () => ({
+      user,
+      isAuthenticated: !!user,
+      bootstrapped,
+      login,
+      logout,
+      hasRole
+    }),
+    [user, bootstrapped, login, logout, hasRole]
+  );
 
   // Avoid JSX parsing issues in some TS configs by using React.createElement
   // eslint-disable-next-line react/react-in-jsx-scope

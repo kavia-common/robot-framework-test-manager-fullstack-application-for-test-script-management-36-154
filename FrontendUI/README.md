@@ -40,8 +40,10 @@ WCAG 2.1 basics are included: keyboard focus management, ARIA labels, skip link,
 
 ## Authentication
 
-- Currently uses a scaffolded in-memory token set on login. The Axios client attaches the token as a Bearer header.
-- For production, switch to server-set httpOnly cookie and update getAuthToken() accordingly.
+- Uses backend-issued JWT access tokens (and optional refresh tokens) returned from `/auth/login` and `/auth/refresh`.
+- Access token is attached as Bearer header via Axios interceptors. On 401, the client will attempt a single refresh; on failure it clears state and redirects to `/login`.
+- User claims (id, name, role) are taken from the backend response `user` field when available, otherwise decoded from the access token payload.
+- Tokens are persisted in sessionStorage for this scaffold. For production, prefer server-set httpOnly cookies and adapt getAuthToken/refresh accordingly.
 
 ## Project scripts
 

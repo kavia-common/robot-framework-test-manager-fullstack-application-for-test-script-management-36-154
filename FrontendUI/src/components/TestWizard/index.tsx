@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -21,8 +21,8 @@ export default function TestWizard({ onCreated }: { onCreated?: () => void }) {
   });
   const { notify } = useNotifications();
 
-  const next = () => setStep((s) => Math.min(2, s + 1));
-  const prev = () => setStep((s) => Math.max(1, s - 1));
+  const next = () => setStep((s: number) => Math.min(2, s + 1));
+  const prev = () => setStep((s: number) => Math.max(1, s - 1));
 
   const onSubmit = handleSubmit(async (values) => {
     await TestsAPI.create(values);

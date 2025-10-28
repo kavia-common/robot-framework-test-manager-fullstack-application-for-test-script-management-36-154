@@ -5,7 +5,7 @@ import Loading from "@components/Common/Loading";
 import ErrorState from "@components/Common/ErrorState";
 import ConfirmDialog from "@components/Common/ConfirmDialog";
 import AccessControl from "@components/Common/AccessControl";
-import { useState } from "react";
+import React, { useState } from "react";
 
 export default function TestDetail() {
   const { id: testId } = useParams();
