@@ -14,9 +14,11 @@ export default defineConfig({
     }
   },
   server: {
-    port: 3000,
     host: true,
+    port: 3000,
     strictPort: true,
+    // Allow only the required preview host, do not broaden beyond necessity.
+    allowedHosts: ["vscode-internal-35511-beta.beta01.cloud.kavia.ai"],
     proxy: {
       "/api": {
         target: "http://localhost:8000",
